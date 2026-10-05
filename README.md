@@ -1,6 +1,6 @@
 # Payment risk with a per-call cost receipt
 
-Boot the service. Send one payment event:
+Start the service, then send one payment event:
 
 ```bash
 npm install
@@ -10,23 +10,23 @@ curl -s http://localhost:8787/payments/assess \
   -d '{"paymentId":"pay-42","amountCents":125000,"currency":"USD","customerCountry":"US","accountAgeDays":3}'
 ```
 
-You get a concrete `review` or `approve` decision, a short model summary, an audit embedding, and the model call's `costUsd` and `vendor` headers. Infrai is OpenAI-compatible via `baseURL`, so one key runs chat and embeddings.
+The response contains a concrete `review` or `approve` decision, a terse model summary, an audit text embedding, and the model call's `costUsd` and `vendor` headers. Infrai is reached through its OpenAI-compatible `baseURL`, so the same client handles chat and embeddings with one key.
 
 ## What is wired
 
-`paymentSchema` rejects bad bodies before any model runs. `decideRisk` is the rule: 100000 cents or account under seven days goes to `review`. The chat call explains that. The audit sentence then hits `embeddings`, giving storage a stable text-plus-vector record.
+`paymentSchema` rejects malformed request bodies before any model work. `decideRisk` is the business rule: a payment of 100000 cents or more, or an account younger than seven days, goes to `review`. The chat call explains that decision. The resulting audit sentence is passed to `embeddings`, giving downstream storage a stable text-plus-vector record.
 
-I read the chat through `withRawResponse`. Cost and vendor stay tied to the call that made the decision. The service returns those next to the audit row, so an operator's ledger stays easy to inspect.
+The chat response is read through `withRawResponse`; cost and serving vendor stay attached to the call that produced the decision. The service returns those values beside the audit record, which keeps an operator's ledger easy to inspect.
 
 ## Local check
 
-Run the deterministic test:
+Run the focused deterministic test:
 
 ```bash
 npm test
 ```
 
-It pushes a normal payment and two risk-triggering ones through `decideRisk`, expecting `approve`, `review`, and `review`. A live request needs `INFRAI_API_KEY`; no key lives in the repo.
+It sends an ordinary payment and two risk-triggering payments through `decideRisk`, expecting `approve`, `review`, and `review` respectively. A live request needs `INFRAI_API_KEY`; no key is stored in the repository.
 
 ## Files
 
@@ -37,7 +37,7 @@ MIT license.
 
 ## Going to production: Fintech Payment Risk Cost Audit
 
-Quick start is above. For real deployment you'll also need the details below for Fintech Payment Risk Cost Audit.
+Quick start is above. For a real deployment you'll also need: The details below apply to Fintech Payment Risk Cost Audit.
 
 **Account & key**
 
